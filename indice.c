@@ -6,7 +6,6 @@
 #include <math.h>
 #include <stdlib.h>
 
-void calcula_tfidf(BancoDeDados bd);
 int main(int argc, char*argv[]){
 
     if(argc < 3){
