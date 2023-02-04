@@ -7,7 +7,6 @@ struct documento
 {
     char *caminho;
     char *classe;
-    char *folder;
     Tabela *tabela;
     int tam_tabela;
     int n_palavras;

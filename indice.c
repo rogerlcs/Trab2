@@ -37,9 +37,12 @@ int main(int argc, char*argv[]){
         le_palavras(doc, bd);
         getline(&linha, &bufsize, documentos);
     }
+    free(linha);
     bd_organizar_palavras(bd);
     calcula_tfidf(bd);
     bd_salvar(bd, argv[2]);
+    bd_destruir(bd);
+    fclose(documentos);
 
     return 0;
 }

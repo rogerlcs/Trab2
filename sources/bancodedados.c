@@ -19,10 +19,10 @@ struct bancodedados
 
 BancoDeDados bd_criar(char *pasta){
     BancoDeDados bd = (BancoDeDados)calloc(1, sizeof(struct bancodedados));
-    bd->tam_docs = 200;
+    bd->tam_docs = 100;
     bd->docs = (Documento *)calloc(bd->tam_docs, sizeof(Documento));
     bd->n_docs = 0;
-    bd->tam_palavras = 5000;
+    bd->tam_palavras = 100;
     bd->palavras = (Palavra *)calloc(bd->tam_palavras, sizeof(Palavra));
     bd->n_palavras = 0;
     int i = strlen(pasta);
@@ -52,7 +52,7 @@ BancoDeDados bd_carregar(char *filebd){
     int n_docs = 0;
     int n_palavras = 0;
     fread(&n_folder, 1, sizeof(int), fbd);
-    char *pasta = (char*)calloc(n_folder, sizeof(char));
+    char *pasta = (char*)calloc(n_folder + 1, sizeof(char));
     BancoDeDados bd = bd_criar(pasta);
     fread(bd->pasta, n_folder, sizeof(char), fbd);
     fread(&n_docs, 1, sizeof(int), fbd);
@@ -74,7 +74,7 @@ BancoDeDados bd_carregar(char *filebd){
 void le_palavras(Documento doc, BancoDeDados bd){
     FILE * fdoc;
     char *doc_txt = documento_obter_caminho(doc);
-    char *caminho = (char *)calloc(strlen(bd->pasta) + strlen(doc_txt) + 1, sizeof(char));
+    char *caminho = (char *)calloc(strlen(bd->pasta) + strlen(doc_txt) + 2, sizeof(char));
     sprintf(caminho, "%s/%s", bd->pasta, doc_txt);
     fdoc = fopen(caminho, "r");
     if(!fdoc){
@@ -100,6 +100,7 @@ void le_palavras(Documento doc, BancoDeDados bd){
         }
         fclose(fdoc);
     }
+    free(caminho);
 }
 
 void bd_adicionar_doc(BancoDeDados bd, Documento doc){
@@ -186,7 +187,7 @@ void bd_salvar(BancoDeDados bd, char *nomearq){
     fwrite(&n_palavras, 1, sizeof(int), fbd);
     for(i = 0; i < n_palavras; i++){
         p = bd_obter_palavra_indice(bd, i);
-        imprimir_palavra(p);
+        //imprimir_palavra(p);
         //printf(" ");
         palavra_salvar(p, fbd);
     }
