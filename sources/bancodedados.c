@@ -140,6 +140,10 @@ int bd_get_n_docs(BancoDeDados bd){
 }
 
 
+void bd_organizar_documentos(BancoDeDados bd){
+    qsort(bd->docs, bd->n_docs, sizeof(Documento), documento_compara_numerop);
+}
+
 void bd_adicionar_palavra(BancoDeDados bd, Palavra p){
     if(bd->n_palavras >= bd->tam_palavras){
         bd->tam_palavras += 200;
@@ -205,7 +209,6 @@ void bd_destruir(BancoDeDados bd){
 }
 
 void calcula_tfidf(BancoDeDados bd){
-    int n_palavras = bd_get_n_palavras(bd);
     int freq = 0;
     float idf_p = 0;
     float idf_d = 0;
@@ -213,10 +216,9 @@ void calcula_tfidf(BancoDeDados bd){
     Tabela t_pal = NULL;
     Tabela t_doc = NULL;
     Documento d = NULL;
-    for(int i = 0; i < n_palavras; i++){
+    for(int i = 0; i < bd_get_n_palavras(bd); i++){
         p = bd_obter_palavra_indice(bd, i);
-        idf_p = log((1 + bd_get_n_docs(bd))/(float)(1 +palavra_get_n_docs(p))) + 1;
-        palavra_calc_tfidf(p, idf_p);
+        calcular_tfidf_palavra(bd, p, bd_get_n_docs(bd));
         for(int j = 0; j < palavra_get_n_docs(p); j++){
             t_pal = palavra_get_tab(p, j);
             d = bd_obter_doc_indice(bd, tabela_get_idx(t_pal));
@@ -224,10 +226,112 @@ void calcula_tfidf(BancoDeDados bd){
             for(int k = 0; k < freq; k++){
                 documento_add_tabela(d, i, 1);
             }
-            idf_d = log((1 + n_palavras)/(float)(1 + documento_get_n_palavras(d))) + 1;
-            documento_calc_tfidf(d, idf_d);
+            calcular_tfidf_documento(bd, d, bd_get_n_palavras(bd));
         }
     }
+}
+
+float calcular_idf(int n1, int d1){
+    return log((1 + n1)/(float)(1 + d1) + 1);
+}
+
+void calcular_tfidf_palavra(BancoDeDados bd, Palavra p, int n_docs){
+    float idf_p = 0;
+    idf_p = calcular_idf(n_docs, palavra_get_n_docs(p));
+    palavra_calc_tfidf(p, idf_p);
+}
+
+void calcular_tfidf_documento(BancoDeDados bd, Documento d, int n_palavras){
+    float idf_d = 0;
+    idf_d = calcular_idf(n_palavras, documento_get_n_palavras(d));
+    documento_calc_tfidf(d, idf_d);
+}
+
+
+char * bd_doc_calc_classe(BancoDeDados bd, BancoDeDados bd2, int k){
+    Tabela t = NULL;
+    Tabela t2 = NULL;
+    Palavra p = NULL;
+    Palavra p2 = NULL;
+    Palavra p3 = NULL;
+    Documento d = NULL;
+    int doc_id = 0, i = 0;
+    int tam_cos = k;
+    Tabela *pcos = (Tabela *)calloc(tam_cos, sizeof(Tabela));
+    int n_cos = 0;
+    int n_docs = 0;
+    float numerador = 0, denominador1 = 0, idf = 0, tfidf1 = 0, tfidf2 = 0, denominador2 = 0, cos = 0;
+    for(i = 0; i < bd_get_n_palavras(bd2); i++){
+        p = bd_obter_palavra_indice(bd2, i);
+        n_docs = palavra_get_n_docs(p);
+        for(int j = 0; j < n_docs; j++){
+            doc_id = tabela_get_idx(palavra_get_tab(p, j));
+            d = bd_obter_doc_indice(bd, doc_id);
+            if(d == NULL){
+                break;
+            }
+            numerador = 0;
+            denominador1 = 0, denominador2 = 0;
+            for(int k = 0; k < documento_get_n_palavras(d); k++){
+                t = copiar_tabela(documento_obter_tabela(d, k));
+                p2 = bd_obter_palavra_indice(bd, tabela_get_idx(t));
+                p3 = bd_obter_palavra(bd2, palavra_get_string(p2));
+                if(p3 == NULL){
+                    idf = calcular_idf(bd_get_n_docs(bd) +1, palavra_get_n_docs(p2));
+                    tfidf2 = 0;
+                }
+                else{
+                    idf = calcular_idf(bd_get_n_docs(bd) +1, palavra_get_n_docs(p2) + 1);
+                    t2 = palavra_get_tab(p3, palavra_get_n_docs(p3)-1);
+                    tabela_calc_tfidf(t2, idf);
+                    tfidf2 = tabela_get_tfidf(t2);
+                }
+                tabela_calc_tfidf(t, idf);
+                tfidf1 = tabela_get_tfidf(t);
+                numerador += tfidf1 * tfidf2;
+                denominador1 += tfidf1*tfidf1;
+                denominador2 += tfidf2*tfidf2;
+                tabela_destruir(t);
+            }
+            cos = numerador / sqrt(denominador1) * sqrt(denominador2);
+            if(tabelas_possui_idx(pcos, doc_id, n_cos) == -1){
+                if(n_cos >= tam_cos){
+                    tam_cos *= 2;
+                    pcos = (Tabela *)realloc(pcos, tam_cos * sizeof(Tabela));
+                }
+                pcos[n_cos] = tabela_criar(doc_id);
+                tabela_set_tfidf(pcos[n_cos], cos);
+                n_cos += 1;
+            }
+        }
+    }
+
+    qsort(pcos, n_cos, sizeof(Tabela), tabela_compara_tfidf);
+
+    char *classe = NULL;
+    char *classe_maior = NULL;
+    int cont_classe = 0;
+    int cont_classe_maior = 0;
+    if(n_cos > k){
+        n_cos = k;
+    }
+    for(i = 0; i < n_cos; i++){
+       d = bd_obter_doc_indice(bd, tabela_get_idx(pcos[i]));
+       classe = documento_obter_classe(d);
+       cont_classe = 0;
+       for(int l = 0; l < n_cos; l++){
+        d = bd_obter_doc_indice(bd, tabela_get_idx(pcos[l]));
+        if(!strcmp(classe, documento_obter_classe(d))){
+            cont_classe += 1;
+        }
+       }
+       if(cont_classe > cont_classe_maior){
+        cont_classe_maior = cont_classe;
+        classe_maior = classe;
+       }
+    }
+
+    printf("Classe do Texto: %s\n", classe_maior);
 }
 
 

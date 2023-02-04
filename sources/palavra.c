@@ -47,8 +47,12 @@ void palavra_add_tabela(Palavra p, int idx_doc, int verify){
 
 void palavra_calc_tfidf(Palavra p, float idf){
     for(int i = 0; i < p->n_documentos; i++){
-        tabela_set_tfidf(p->tabela[i], idf);
+        tabela_calc_tfidf(p->tabela[i], idf);
     }
+}
+
+Palavra palavra_organizar_tabela(Palavra p, int compare(const void*, const void*)){
+    qsort(p->tabela, p->n_documentos, sizeof(Tabela), compare);
 }
 
 int palavra_get_n_docs(Palavra p){
@@ -75,6 +79,7 @@ void palavra_salvar(Palavra p, FILE * fpalavra){
     fwrite(&n, 1, sizeof(int), fpalavra);
     fwrite(p->palavra, n, sizeof(char), fpalavra);
     fwrite(&p->n_documentos, 1, sizeof(int), fpalavra);
+    //qsort(p->tabela, p->n_documentos, sizeof(Tabela), compara_idx);
     for(int i = 0; i < p->n_documentos; i++){
         tabela_salvar(p->tabela[i], fpalavra);
     }
@@ -112,5 +117,21 @@ void palavra_destruir(Palavra p){
     }
     free(p->tabela);
     free(p);
+}
+
+char * palavra_get_string(Palavra p){
+    return p->palavra;
+}
+
+Palavra palavra_copiar(Palavra p){
+    Palavra p1 = (Palavra)calloc(1, sizeof(struct palavra));
+    p1->tam_tabela = p->tam_tabela;
+    p1->n_documentos = p->n_documentos;
+    p1->palavra = strdup(p->palavra);
+    p1->tabela = (Tabela *)calloc(p->tam_tabela, sizeof(Tabela));
+    for(int i = 0; i < p1->n_documentos; i++){
+        p1->tabela[i] = copiar_tabela(p->tabela[i]);
+    }
+    return p1;
 }
 

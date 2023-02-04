@@ -20,7 +20,7 @@ Tabela tabela_criar(int indice){
 void tabela_add_freq(Tabela t){
     t->frequencia += 1;
 }
-void tabela_set_tfidf(Tabela t, float idf){
+void tabela_calc_tfidf(Tabela t, float idf){
     t->tfidf = idf * t->frequencia;
 }
 
@@ -28,6 +28,10 @@ void tabela_imprimir(Tabela t){
     printf("Indice: %d|", t->indice);
     printf("Frequencia %d|", t->frequencia);
     printf("Tf-idf: %.2f\n", t->tfidf);
+}
+
+void tabela_set_tfidf(Tabela t, float tfidf){
+    t->tfidf = tfidf;
 }
 
 void tabela_salvar(Tabela t, FILE * ftabela){
@@ -48,6 +52,11 @@ int tabela_compara_idx(int idx, Tabela t){
     if(idx == t->indice) return 1;
     return 0;
 }
+/*int compara_idx(const void * i1, const void *i2){
+    Tabela t1 = *(Tabela *)i1;
+    Tabela t2 = *(Tabela *)i2;
+    return t1->indice - t2->indice;
+}*/
 
 void somar_tabelas(Tabela t1, Tabela t2){
     t1->tfidf += t2->tfidf;
@@ -78,12 +87,36 @@ int tabela_get_frequencia(Tabela t){
     return t->frequencia;
 }
 
+float tabela_get_tfidf(Tabela t){
+    return t->tfidf;
+}
 
 int compara_tabela(const void *t1, const void *t2){
     Tabela tab1 = *(Tabela *)t1;
     Tabela tab2 = *(Tabela *)t2;
     return -1*(tab1->tfidf - tab2->tfidf);
 }
+
+int tabela_compara_frequencia(const void *t1, const void *t2){
+    Tabela tab1 = *(Tabela *)t1;
+    Tabela tab2 = *(Tabela *)t2;
+
+    return (tab1->frequencia - tab2->frequencia);
+}
+
+int tabela_compara_tfidf(const void *t1, const void *t2){
+    Tabela tab1 = *(Tabela *)t1;
+    Tabela tab2 = *(Tabela *)t2;
+
+    if(tab1->tfidf - tab2->frequencia > 0){
+        return -1;
+    }
+    else if(tab1->tfidf - tab2->frequencia < 0){
+        return 1;
+    }
+    return 0;
+}
+
 
 int tabela_set_frequencia(Tabela t, int freq){
     t->frequencia = freq;

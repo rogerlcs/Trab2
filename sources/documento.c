@@ -27,6 +27,17 @@ char * documento_obter_caminho(Documento d){
     return d->caminho;
 }
 
+char * documento_obter_classe(Documento d){
+    return d->classe;
+}
+
+
+int documento_compara_numerop(const void *d1, const void *d2){
+    Documento doc1 = *(Documento *)d1;
+    Documento doc2 = *(Documento *)d2;
+    return -1 * (doc1->n_palavras - doc2->n_palavras);
+}
+
 void documento_add_tabela(Documento d, int idx_pal, int verify){
     int achou = -1;
     if(verify){
@@ -63,7 +74,7 @@ int documento_get_n_palavras(Documento d){
 
 void documento_calc_tfidf(Documento d, float idf){
     for(int i =0; i < documento_get_n_palavras(d); i++){
-        tabela_set_tfidf(d->tabela[i], idf);
+        tabela_calc_tfidf(d->tabela[i], idf);
     }
 }
 

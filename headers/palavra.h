@@ -10,6 +10,7 @@ Palavra palavra_criar();
 int compara_palavra_string(const void *palavra, const void *p1);
 int compara_palavra_tfidf(const void *p1, const void *p2);
 int compara_palavras(const void *p1, const void *p2);
+char * palavra_get_string(Palavra p);
 void palavra_destruir(Palavra p);
 void palavra_calc_tfidf(Palavra p, float idf);
 int palavra_get_n_docs(Palavra p);
@@ -18,6 +19,8 @@ void palavra_salvar(Palavra p, FILE * fpalavra);
 Palavra palavra_carregar(FILE * fpalavra);
 void palavra_add_tabela(Palavra p, int idx_doc, int verify);
 void imprimir_palavra(Palavra p);
+Palavra palavra_copiar(Palavra p);
+Palavra palavra_organizar_tabela(Palavra p, int compare(const void*, const void*));
 
 
 #endif
