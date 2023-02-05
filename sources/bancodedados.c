@@ -26,14 +26,19 @@ BancoDeDados bd_criar(char *pasta){
     bd->palavras = (Palavra *)calloc(bd->tam_palavras, sizeof(Palavra));
     bd->n_palavras = 0;
     int i = strlen(pasta);
-    while (pasta[i] != '/' && i > -1) {
+    while (i > -1 && pasta[i] != '/') {
         i--;
     }
-    bd->pasta = (char*)calloc(i + 1, sizeof(char));
-    for (int j = 0; j < i; j++) {
-        bd->pasta[j] = pasta[j];
+    if(i > 0){
+        bd->pasta = (char*)calloc(i + 1, sizeof(char));
+        for (int j = 0; j < i; j++) {
+            bd->pasta[j] = pasta[j];
+        }
+        bd->pasta[i] = '\0';
     }
-    bd->pasta[i] = '\0';
+    else{
+        bd->pasta = pasta;
+    }
     return bd;
 }
 
@@ -52,9 +57,9 @@ BancoDeDados bd_carregar(char *filebd){
     int n_docs = 0;
     int n_palavras = 0;
     fread(&n_folder, 1, sizeof(int), fbd);
-    char *pasta = (char*)calloc(n_folder + 1, sizeof(char));
+    char *pasta = (char *)calloc(n_folder, sizeof(char));
+    fread(pasta, n_folder, sizeof(char), fbd);
     BancoDeDados bd = bd_criar(pasta);
-    fread(bd->pasta, n_folder, sizeof(char), fbd);
     fread(&n_docs, 1, sizeof(int), fbd);
     for(i = 0; i < n_docs; i++){
         d = documento_carregar(fbd);
@@ -66,7 +71,6 @@ BancoDeDados bd_carregar(char *filebd){
         bd_adicionar_palavra(bd, p);
         //imprimir_palavra(p);
     }
-    free(pasta);
     fclose(fbd);
     return bd;
 }
@@ -327,12 +331,16 @@ char * bd_doc_calc_classe(BancoDeDados bd, BancoDeDados bd2, int k){
         }
        }
        if(cont_classe > cont_classe_maior){
-        cont_classe_maior = cont_classe;
-        classe_maior = classe;
+            cont_classe_maior = cont_classe;
+            classe_maior = classe;
        }
     }
+    for(i = 0; i < n_cos; i++){
+        tabela_destruir(pcos[i]);
+    }
+    free(pcos);
 
-    printf("Classe do Texto: %s\n", classe_maior);
+    return classe_maior;
 }
 
 

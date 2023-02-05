@@ -26,7 +26,7 @@ void pclasse_add(PClasse *pclass, int *tam, char *classe){
     if(!possui){
         PClasse p;
         p.classe = classe;
-        //printf("\nClasse:%s\n", classe);
+        p.freq = 1;
         pclass[*tam] = p;
         *tam += 1; 
     }
@@ -151,13 +151,14 @@ void buscar_noticias(BancoDeDados bd){
 
 void classificar_noticia(BancoDeDados bd, int k){
     char palavra[250] = "\0";
+    char pasta[50] = "pasta/";
     char lixo = ' ';
     Palavra p = NULL;
     Palavra p2 = NULL;
-    BancoDeDados bd2 = bd_criar("");
+    BancoDeDados bd2 = bd_criar(pasta);
     printf("Digite um texto terminado em . :\n");
     while(lixo != '.' && scanf("%[a-zA-Z0-9]", palavra) == 1){
-        scanf("%*c", lixo);
+        scanf("%c", &lixo);
         p = bd_obter_palavra(bd, palavra);
         if(p != NULL){
             p2 = palavra_copiar(p);
@@ -182,10 +183,10 @@ void relatorio_palavras(BancoDeDados bd){
     Documento d = NULL;
     Tabela t = NULL;
     int n_classes = 0;
+    PClasse *classesFreq = (PClasse *)calloc(CLASSES, sizeof(PClasse));
     if(p != NULL){
         printf("%s:\nNumero de documentos: %d\n", palavra, palavra_get_n_docs(p));
         palavra_organizar_tabela(p, tabela_compara_frequencia);
-        PClasse *classesFreq = (PClasse *)calloc(CLASSES, sizeof(PClasse));
         while(i < palavra_get_n_docs(p)){
             d = bd_obter_doc_indice(bd, tabela_get_idx(palavra_get_tab(p, i)));
             if(i < 10){
@@ -201,8 +202,8 @@ void relatorio_palavras(BancoDeDados bd){
         printf("Frequencia por classe:\n");
         qsort(classesFreq, n_classes, sizeof(PClasse), pclasse_comparar);
         pclasse_imprimir(classesFreq, n_classes);
-        free(classesFreq);
     }
+    free(classesFreq);
 }
 
 void relatorio_documentos(BancoDeDados bd){

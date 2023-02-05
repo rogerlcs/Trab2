@@ -90,8 +90,8 @@ Palavra palavra_carregar(FILE * fpalavra){
     int n_docs = 0;
     fread(&n, 1, sizeof(int), fpalavra);
     char *string = (char *)calloc(n, sizeof(char));
+    fread(string, n, sizeof(char), fpalavra);
     Palavra p = palavra_criar(string);
-    fread(p->palavra, n, sizeof(char), fpalavra);
     fread(&n_docs, 1, sizeof(int), fpalavra);
     for(int i = 0; i < n_docs; i++){
         fread(&n, 1, sizeof(int), fpalavra);
